@@ -3,9 +3,19 @@ Spring Music
 
 This is a sample application for using database services on [Cloud Foundry](http://cloudfoundry.org) with the [Spring Framework](http://spring.io) and [Spring Boot](http://projects.spring.io/spring-boot/).
 
-This application has been built to store the same domain objects in one of a variety of different persistence technologies - relational, document, and key-value stores. This is not meant to represent a realistic use case for these technologies, since you would typically choose the one most applicable to the type of data you need to store, but it is useful for testing and experimenting with different types of services on Cloud Foundry. 
+This application has been built to store the same domain objects in one of a variety of different persistence technologies - relational, document, and key-value stores. This is not meant to represent a realistic use case for these technologies, since you would typically choose the one most applicable to the type of data you need to store, but it is useful for testing and experimenting with different types of services on Cloud Foundry.
 
-The application use Spring Java configuration and [bean profiles](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-profiles.html) to configure the application and the connection objects needed to use the persistence stores. It also uses the [Spring Cloud Connectors](http://cloud.spring.io/spring-cloud-connectors/) library to inspect the environment when running on Cloud Foundry. See the [Cloud Foundry documentation](http://docs.cloudfoundry.org/buildpacks/java/spring-service-bindings.html) for details on configuring a Spring application for Cloud Foundry.
+The application use Spring Java configuration and [bean profiles](http://docs.spring.io/spring-boot/docs/current/reference/html/boot-features-profiles.html) to configure the application and the connection objects needed to use the persistence stores. It also uses the [Java CFEnv](https://github.com/pivotal-cf/java-cfenv/) library to inspect the environment when running on Cloud Foundry. See the [Cloud Foundry documentation](http://docs.cloudfoundry.org/buildpacks/java/spring-service-bindings.html) for details on configuring a Spring application for Cloud Foundry.
+
+## Building
+
+This project requires a Java version between 8 and 15 to compile. Java 16 and later versions are not yet supported.
+
+To build a runnable Spring Boot jar file, run the following command: 
+
+~~~
+$ ./gradlew clean assemble
+~~~
 
 ## Running the application locally
 
@@ -14,19 +24,17 @@ One Spring bean profile should be activated to choose the database provider that
 The application can be started locally using the following command:
 
 ~~~
-$ ./gradlew clean assemble
 $ java -jar -Dspring.profiles.active=<profile> build/libs/spring-music.jar
 ~~~
 
 where `<profile>` is one of the following values:
 
-* `in-memory` (no external database required)
 * `mysql`
 * `postgres`
 * `mongodb`
 * `redis`
 
-If no profile is provided, `in-memory` will be used. If any other profile is provided, the appropriate database server must be started separately. The application will use the host name `localhost` and the default port to connect to the database. The connection parameters can be configured by setting the appropriate [Spring Boot properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html). 
+If no profile is provided, an in-memory relational database will be used. If any other profile is provided, the appropriate database server must be started separately. Spring Boot will auto-configure a connection to the database using it's auto-configuration defaults. The connection parameters can be configured by setting the appropriate [Spring Boot properties](http://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html).
 
 If more than one of these profiles is provided, the application will throw an exception and fail to start.
 
@@ -34,14 +42,13 @@ If more than one of these profiles is provided, the application will throw an ex
 
 When running on Cloud Foundry, the application will detect the type of database service bound to the application (if any). If a service of one of the supported types (MySQL, Postgres, Oracle, MongoDB, or Redis) is bound to the app, the appropriate Spring profile will be configured to use the database service. The connection strings and credentials needed to use the service will be extracted from the Cloud Foundry environment.
 
-If no bound services are found containing any of these values in the name, then the `in-memory` profile will be used.
+If no bound services are found containing any of these values in the name, an in-memory relational database will be used.
 
 If more than one service containing any of these values is bound to the application, the application will throw an exception and fail to start.
 
 After installing the 'cf' [command-line interface for Cloud Foundry](http://docs.cloudfoundry.org/cf-cli/), targeting a Cloud Foundry instance, and logging in, the application can be built and pushed using these commands:
 
 ~~~
-$ ./gradlew clean assemble
 $ cf push
 ~~~
 
@@ -95,4 +102,7 @@ $ cf restart
 
 #### Database drivers
 
-Database drivers for MySQL, Postgres, Microsoft SQL Server, MongoDB, and Redis are included in the project. To connect to an Oracle database, you will need to download the appropriate driver (e.g. from http://www.oracle.com/technetwork/database/enterprise-edition/jdbc-112010-090769.html?ssSourceSiteId=otnjp), add the driver .jar file to the `src/main/webapp/WEB-INF/lib` directory in the project, and re-build the application .jar file.
+Database drivers for MySQL, Postgres, Microsoft SQL Server, MongoDB, and Redis are included in the project.
+
+To connect to an Oracle database, you will need to download the appropriate driver (e.g. from http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html). Then make a `libs` directory in the `spring-music` project, and move the driver, `ojdbc7.jar` or `ojdbc8.jar`, into the `libs` directory.
+In `build.gradle`, uncomment the line `compile files('libs/ojdbc8.jar')` or `compile files('libs/ojdbc7.jar')` and run `./gradle assemble`
