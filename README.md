@@ -9,9 +9,12 @@ The application use Spring Java configuration and [bean profiles](http://docs.sp
 
 ## Building
 
-This project requires a Java version between 8 and 15 to compile. Java 16 and later versions are not yet supported.
+This project requires Java version 17 or later to compile.
 
-To build a runnable Spring Boot jar file, run the following command: 
+> [!NOTE]
+> If you need to use an earlier Java version, check out the [`spring-boot-2` branch](https://github.com/cloudfoundry-samples/spring-music/tree/spring-boot-2), which can be built with Java 8 and later.  
+
+To build a runnable Spring Boot jar file, run the following command:
 
 ~~~
 $ ./gradlew clean assemble
@@ -24,7 +27,7 @@ One Spring bean profile should be activated to choose the database provider that
 The application can be started locally using the following command:
 
 ~~~
-$ java -jar -Dspring.profiles.active=<profile> build/libs/spring-music.jar
+$ java -jar -Dspring.profiles.active=<profile> build/libs/spring-music-1.0.jar
 ~~~
 
 where `<profile>` is one of the following values:
@@ -105,4 +108,25 @@ $ cf restart
 Database drivers for MySQL, Postgres, Microsoft SQL Server, MongoDB, and Redis are included in the project.
 
 To connect to an Oracle database, you will need to download the appropriate driver (e.g. from http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html). Then make a `libs` directory in the `spring-music` project, and move the driver, `ojdbc7.jar` or `ojdbc8.jar`, into the `libs` directory.
-In `build.gradle`, uncomment the line `compile files('libs/ojdbc8.jar')` or `compile files('libs/ojdbc7.jar')` and run `./gradle assemble`
+In `build.gradle`, uncomment the line `compile files('libs/ojdbc8.jar')` or `compile files('libs/ojdbc7.jar')` and run `./gradle assemble`.
+
+
+## Alternate Java versions
+
+By default, the application will be built and deployed using Java 17 compatibility.
+If you want to use a more recent version of Java, you will need to update two things.
+
+In `build.gradle`, change the `targetCompatibility` Java version from `JavaVersion.VERSION_17` to a different value from `JavaVersion`:
+
+~~~
+java {
+  ...
+  targetCompatibility = JavaVersion.VERSION_17
+}
+~~~
+
+In `manifest.yml`, change the Java buildpack JRE version from `version: 17.+` to a different value:
+
+~~~
+    JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 17.+ } }'
+~~~
